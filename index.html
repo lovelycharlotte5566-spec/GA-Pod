@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GA POD - Say anything. Stay anonymous.</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background Carousel -->
+    <div class="background-carousel">
+        <div class="carousel-slide active" style="background-image: url('top-view-asmr-microphone-with-pencil-sharpener.jpg');"></div>
+        <div class="carousel-slide" style="background-image: url('recording-technology-podcast-microphone-livestream-used-record-content-discussion-internet-channel-stream-sound-production-station-creative-onlien-broadcast-close-up.jpg');"></div>
+        <div class="carousel-slide" style="background-image: url('asmr-microphone-with-feather-sound-making.jpg');"></div>
+        <div class="carousel-overlay"></div>
+    </div>
+
+    <!-- Feed Page (Default View) -->
+    <div id="feedPage" class="page active">
+        <div class="container">
+            <!-- Header Section -->
+            <header class="header">
+                <h1 class="site-title">GA POD</h1>
+                <p class="tagline">Say anything. Stay anonymous.</p>
+            </header>
+
+            <!-- Messages Feed Section -->
+            <section class="messages-section">
+                <div id="pullToRefresh" class="pull-to-refresh">
+                    <div class="pull-to-refresh-icon">⬇️</div>
+                    <div class="pull-to-refresh-text">Pull to refresh</div>
+                </div>
+                
+                <div class="messages-header">
+                    <h2>Public Feed</h2>
+                    <div class="header-controls">
+                        <select id="filterSelect" class="filter-select">
+                            <option value="all">All Categories</option>
+                            <option value="Christianity">Christianity</option>
+                            <option value="Relationship">Relationship</option>
+                            <option value="Education">Education</option>
+                            <option value="Social">Social</option>
+                            <option value="Career">Career</option>
+                            <option value="Health">Health</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <button id="clearBtn" class="clear-btn">Clear My Messages</button>
+                    </div>
+                </div>
+                <div id="messagesContainer" class="messages-container">
+                    <!-- Messages will be dynamically inserted here -->
+                </div>
+                <div id="emptyState" class="empty-state">
+                    <p>No messages yet. Be the first to whisper something!</p>
+                </div>
+            </section>
+        </div>
+
+        <!-- Floating Action Button (+ Button) -->
+        <button id="addPostBtn" class="fab-btn" title="Create new post">
+            <span class="fab-icon">+</span>
+        </button>
+
+        <!-- Scroll to Top Button -->
+        <button id="scrollToTopBtn" class="scroll-to-top-btn" title="Scroll to top">
+            <span class="scroll-to-top-icon">↑</span>
+        </button>
+    </div>
+
+    <!-- Post Page -->
+    <div id="postPage" class="page">
+        <div class="container">
+            <!-- Header Section -->
+            <header class="header">
+                <button id="backBtn" class="back-btn" title="Go back to feed">←</button>
+                <h1 class="site-title">New Post</h1>
+                <p class="tagline">Share your thoughts anonymously</p>
+            </header>
+
+            <!-- Message Input Section -->
+            <section class="input-section">
+                <div class="input-container">
+                    <div class="input-fields">
+                        <div class="input-row">
+                            <input 
+                                type="text" 
+                                id="anonymousName" 
+                                class="name-input" 
+                                placeholder="Your anonymous name (optional)"
+                                maxlength="20"
+                            />
+                            <div class="select-wrapper">
+                                <select id="categorySelect" class="category-select" required>
+                                    <option value="">Select Category *</option>
+                                    <option value="Christianity">Christianity</option>
+                                    <option value="Relationship">Relationship</option>
+                                    <option value="Education">Education</option>
+                                    <option value="Social">Social</option>
+                                    <option value="Career">Career</option>
+                                    <option value="Health">Health</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <textarea 
+                            id="messageInput" 
+                            class="message-input" 
+                            placeholder="What's on your mind? Share it anonymously..."
+                            rows="6"
+                        ></textarea>
+                    </div>
+                    <div class="input-footer">
+                        <div class="char-counter">
+                            <span id="charCount">0</span> words / 500 max
+                        </div>
+                        <button id="postBtn" class="post-btn">Post</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
