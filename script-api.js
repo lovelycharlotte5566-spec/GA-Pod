@@ -31,10 +31,7 @@ let isRefreshing = false;
 // Helper function for API calls
 async function apiCall(endpoint, options = {}) {
     try {
-        const url = `${API_BASE_URL}${endpoint}`;
-        console.log('API Call:', url, options.method || 'GET');
-        
-        const response = await fetch(url, {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             headers: {
                 'Content-Type': 'application/json',
                 ...options.headers
@@ -43,16 +40,12 @@ async function apiCall(endpoint, options = {}) {
         });
         
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('API Error:', response.status, errorText);
-            throw new Error(`API error: ${response.status} - ${errorText}`);
+            throw new Error(`API error: ${response.status}`);
         }
         
-        const data = await response.json();
-        console.log('API Response:', endpoint, data);
-        return data;
+        return await response.json();
     } catch (error) {
-        console.error('API call failed:', endpoint, error);
+        console.error('API call failed:', error);
         throw error;
     }
 }
@@ -317,10 +310,7 @@ async function postMessage() {
     }
     
     try {
-        console.log('📝 Posting message...');
-        console.log('Message data:', { text: messageText.substring(0, 50) + '...', author: anonymousName, category });
-        
-        const result = await apiCall('/messages', {
+        await apiCall('/messages', {
             method: 'POST',
             body: JSON.stringify({
                 text: messageText,
@@ -328,8 +318,6 @@ async function postMessage() {
                 category: category
             })
         });
-        
-        console.log('✅ Message posted successfully:', result);
         
         // Clear inputs
         messageInput.value = '';
@@ -343,19 +331,16 @@ async function postMessage() {
             filterSelect.value = 'all';
         }
         
-        // Navigate to feed
+        // Navigate to feed and reload
         showFeedPage();
+        await loadMessages();
         
-        // Force reload messages after a delay to ensure database is updated
-        console.log('🔄 Reloading messages in 1 second...');
-        setTimeout(async () => {
-            await loadMessages();
+        setTimeout(() => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        }, 1000);
+        }, 100);
     } catch (error) {
-        console.error('❌ Error posting message:', error);
-        const errorMsg = error.message || 'Unknown error';
-        alert(`Failed to post message: ${errorMsg}\n\nCheck browser console (F12) for details.`);
+        alert('Failed to post message. Please try again.');
+        console.error('Error posting message:', error);
     }
 }
 
@@ -363,16 +348,10 @@ async function postMessage() {
  * Load messages from API
  */
 async function loadMessages() {
-    console.log('Loading messages...');
     try {
         await renderMessages();
-        console.log('Messages loaded successfully');
     } catch (error) {
         console.error('Error loading messages:', error);
-        // Show user-friendly error
-        if (messagesContainer) {
-            messagesContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: #e74c3c;">Failed to load messages. Please refresh the page.</div>';
-        }
     }
 }
 
@@ -380,26 +359,18 @@ async function loadMessages() {
  * Render all messages
  */
 async function renderMessages() {
-    if (!messagesContainer) {
-        console.error('❌ messagesContainer not found');
-        return;
-    }
+    if (!messagesContainer) return;
     
     try {
-        console.log('🔄 Fetching messages with filter:', currentFilter);
         const endpoint = currentFilter !== 'all' 
             ? `/messages?category=${encodeURIComponent(currentFilter)}`
             : '/messages';
         
-        console.log('📡 Calling API:', `${API_BASE_URL}${endpoint}`);
         const messages = await apiCall(endpoint);
-        console.log('✅ Received messages:', messages);
-        console.log('📊 Message count:', messages ? messages.length : 0);
         
         messagesContainer.innerHTML = '';
         
-        if (!messages || !Array.isArray(messages) || messages.length === 0) {
-            console.log('ℹ️ No messages to display');
+        if (messages.length === 0) {
             if (emptyState) {
                 emptyState.classList.remove('hidden');
                 emptyState.querySelector('p').textContent = currentFilter === 'all' 
@@ -411,29 +382,17 @@ async function renderMessages() {
                 emptyState.classList.add('hidden');
             }
             
-            console.log(`🎨 Rendering ${messages.length} messages`);
             for (const message of messages) {
-                try {
-                    const messageCard = await createMessageCard(message);
-                    messagesContainer.appendChild(messageCard);
-                } catch (error) {
-                    console.error('Error creating message card:', error, message);
-                }
+                const messageCard = await createMessageCard(message);
+                messagesContainer.appendChild(messageCard);
             }
-            console.log('✅ All messages rendered');
         }
     } catch (error) {
-        console.error('❌ Error rendering messages:', error);
-        console.error('Error details:', error.message, error.stack);
-        
+        console.error('Error rendering messages:', error);
         if (emptyState) {
             emptyState.classList.remove('hidden');
-            emptyState.querySelector('p').textContent = `Error loading messages: ${error.message}. Please refresh the page.`;
+            emptyState.querySelector('p').textContent = 'Error loading messages. Please refresh.';
         }
-        
-        // Show detailed error to user
-        const errorMsg = error.message || 'Unknown error';
-        alert(`Failed to load messages: ${errorMsg}\n\nCheck browser console (F12) for details.`);
     }
 }
 
