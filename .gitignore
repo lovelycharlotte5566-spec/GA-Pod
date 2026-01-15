@@ -16,3 +16,12 @@ desktop.ini
 # Temporary files
 *.tmp
 *.temp
+
+# Node modules
+node_modules/
+package-lock.json
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
