@@ -65,12 +65,25 @@ module.exports = async (req, res) => {
             const authorName = author || 'Anonymous';
             
             console.log('💾 Inserting message into database...');
+            console.log('SQL: INSERT INTO messages (text, author, category, timestamp) VALUES (?, ?, ?, ?)');
+            console.log('Params:', [text.substring(0, 50) + '...', authorName, category, timestamp]);
+            
             const result = await db.execute(
                 'INSERT INTO messages (text, author, category, timestamp) VALUES (?, ?, ?, ?)',
                 [text, authorName, category, timestamp]
             );
             
+            console.log('✅ Insert result:', result);
             console.log('✅ Message created with ID:', result.lastInsertRowid);
+            
+            // Verify the message was saved by fetching it back
+            if (result.lastInsertRowid) {
+                const verifyResult = await db.execute(
+                    'SELECT * FROM messages WHERE id = ?',
+                    [result.lastInsertRowid]
+                );
+                console.log('✅ Verified message in database:', verifyResult.rows[0]);
+            }
             
             const newMessage = {
                 id: result.lastInsertRowid,

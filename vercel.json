@@ -1,34 +1,19 @@
 {
   "version": 2,
-  "functions": {
-    "api/**/*.js": {
-      "maxDuration": 10
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
     }
-  },
+  ],
   "routes": [
     {
-      "src": "/api/test",
-      "dest": "/api/test.js"
-    },
-    {
-      "src": "/api/messages",
-      "dest": "/api/messages.js"
-    },
-    {
-      "src": "/api/messages/(.*)",
-      "dest": "/api/messages/$1"
-    },
-    {
-      "src": "/api/cleanup",
-      "dest": "/api/cleanup.js"
-    },
-    {
-      "src": "/(.*\\.(html|css|js|jpg|png|gif|svg|ico))",
-      "dest": "/$1"
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/$1"
     }
   ]
 }
