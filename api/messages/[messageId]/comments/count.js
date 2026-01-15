@@ -12,7 +12,9 @@ module.exports = async (req, res) => {
     
     try {
         const db = await getDbConnection();
-        const messageId = req.query.messageId || (req.url.match(/\/messages\/(\d+)/) ? req.url.match(/\/messages\/(\d+)/)[1] : null);
+        // Extract messageId from URL - go up 1 level from /count
+        const urlParts = req.url.split('/');
+        const messageId = urlParts[urlParts.length - 2] || req.query.messageId;
         
         if (!messageId) {
             return res.status(400).json({ error: 'Message ID is required' });
@@ -29,6 +31,6 @@ module.exports = async (req, res) => {
         return res.status(200).json({ count: Number(count) || 0 });
     } catch (error) {
         console.error('Error fetching comment count:', error);
-        return res.status(500).json({ error: 'Internal server error' });
+        return res.status(500).json({ error: 'Internal server error', details: error.message });
     }
 };

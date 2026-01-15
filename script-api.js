@@ -317,7 +317,10 @@ async function postMessage() {
     }
     
     try {
-        await apiCall('/messages', {
+        console.log('📝 Posting message...');
+        console.log('Message data:', { text: messageText.substring(0, 50) + '...', author: anonymousName, category });
+        
+        const result = await apiCall('/messages', {
             method: 'POST',
             body: JSON.stringify({
                 text: messageText,
@@ -325,6 +328,8 @@ async function postMessage() {
                 category: category
             })
         });
+        
+        console.log('✅ Message posted successfully:', result);
         
         // Clear inputs
         messageInput.value = '';
@@ -338,16 +343,19 @@ async function postMessage() {
             filterSelect.value = 'all';
         }
         
-        // Navigate to feed and reload
+        // Navigate to feed
         showFeedPage();
-        await loadMessages();
         
-        setTimeout(() => {
+        // Force reload messages after a delay to ensure database is updated
+        console.log('🔄 Reloading messages in 1 second...');
+        setTimeout(async () => {
+            await loadMessages();
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        }, 100);
+        }, 1000);
     } catch (error) {
-        alert('Failed to post message. Please try again.');
-        console.error('Error posting message:', error);
+        console.error('❌ Error posting message:', error);
+        const errorMsg = error.message || 'Unknown error';
+        alert(`Failed to post message: ${errorMsg}\n\nCheck browser console (F12) for details.`);
     }
 }
 
@@ -373,22 +381,25 @@ async function loadMessages() {
  */
 async function renderMessages() {
     if (!messagesContainer) {
-        console.error('messagesContainer not found');
+        console.error('❌ messagesContainer not found');
         return;
     }
     
     try {
-        console.log('Fetching messages with filter:', currentFilter);
+        console.log('🔄 Fetching messages with filter:', currentFilter);
         const endpoint = currentFilter !== 'all' 
             ? `/messages?category=${encodeURIComponent(currentFilter)}`
             : '/messages';
         
+        console.log('📡 Calling API:', `${API_BASE_URL}${endpoint}`);
         const messages = await apiCall(endpoint);
-        console.log('Received messages:', messages);
+        console.log('✅ Received messages:', messages);
+        console.log('📊 Message count:', messages ? messages.length : 0);
         
         messagesContainer.innerHTML = '';
         
-        if (!messages || messages.length === 0) {
+        if (!messages || !Array.isArray(messages) || messages.length === 0) {
+            console.log('ℹ️ No messages to display');
             if (emptyState) {
                 emptyState.classList.remove('hidden');
                 emptyState.querySelector('p').textContent = currentFilter === 'all' 
@@ -400,20 +411,29 @@ async function renderMessages() {
                 emptyState.classList.add('hidden');
             }
             
-            console.log(`Rendering ${messages.length} messages`);
+            console.log(`🎨 Rendering ${messages.length} messages`);
             for (const message of messages) {
-                const messageCard = await createMessageCard(message);
-                messagesContainer.appendChild(messageCard);
+                try {
+                    const messageCard = await createMessageCard(message);
+                    messagesContainer.appendChild(messageCard);
+                } catch (error) {
+                    console.error('Error creating message card:', error, message);
+                }
             }
+            console.log('✅ All messages rendered');
         }
     } catch (error) {
-        console.error('Error rendering messages:', error);
+        console.error('❌ Error rendering messages:', error);
+        console.error('Error details:', error.message, error.stack);
+        
         if (emptyState) {
             emptyState.classList.remove('hidden');
-            emptyState.querySelector('p').textContent = 'Error loading messages. Please refresh the page.';
+            emptyState.querySelector('p').textContent = `Error loading messages: ${error.message}. Please refresh the page.`;
         }
-        // Show error to user
-        alert('Failed to load messages. Please check your connection and refresh the page.');
+        
+        // Show detailed error to user
+        const errorMsg = error.message || 'Unknown error';
+        alert(`Failed to load messages: ${errorMsg}\n\nCheck browser console (F12) for details.`);
     }
 }
 

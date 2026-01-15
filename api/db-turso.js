@@ -95,24 +95,35 @@ async function initializeDatabase(db) {
 function wrapTursoClient(client) {
     return {
         execute: async (query, params = []) => {
-            const result = await client.execute(query, params);
-            
-            // Check if it's a SELECT query
-            const isSelect = query.trim().toUpperCase().startsWith('SELECT');
-            
-            if (isSelect) {
-                // For SELECT queries, return rows
-                return {
-                    rows: result.rows || [],
-                    changes: 0
-                };
-            } else {
-                // For INSERT/UPDATE/DELETE, return changes info
-                return {
-                    rows: [],
-                    changes: result.rowsAffected || 0,
-                    lastInsertRowid: result.lastInsertRowid || 0
-                };
+            try {
+                console.log('🔍 Executing query:', query.substring(0, 50) + '...');
+                const result = await client.execute(query, params);
+                
+                // Check if it's a SELECT query
+                const isSelect = query.trim().toUpperCase().startsWith('SELECT');
+                
+                if (isSelect) {
+                    // For SELECT queries, return rows
+                    const rows = result.rows || [];
+                    console.log(`✅ Query returned ${rows.length} rows`);
+                    return {
+                        rows: rows,
+                        changes: 0
+                    };
+                } else {
+                    // For INSERT/UPDATE/DELETE, return changes info
+                    const changes = result.rowsAffected || 0;
+                    const lastId = result.lastInsertRowid || 0;
+                    console.log(`✅ Query affected ${changes} rows, last ID: ${lastId}`);
+                    return {
+                        rows: [],
+                        changes: changes,
+                        lastInsertRowid: lastId
+                    };
+                }
+            } catch (error) {
+                console.error('❌ Query error:', error);
+                throw error;
             }
         }
     };

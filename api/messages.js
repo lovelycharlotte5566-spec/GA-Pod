@@ -12,7 +12,9 @@ module.exports = async (req, res) => {
     }
     
     try {
+        console.log('📥 Messages API called:', req.method, req.url);
         const db = await getDbConnection();
+        console.log('✅ Database connected');
         
         if (req.method === 'GET') {
             // Get messages
@@ -29,48 +31,73 @@ module.exports = async (req, res) => {
             
             query += ' ORDER BY timestamp DESC';
             
-            console.log('Fetching messages:', query, params);
+            console.log('🔍 Query:', query);
+            console.log('📊 Params:', params);
+            
             const result = await db.execute(query, params);
             const rows = Array.isArray(result.rows) ? result.rows : (result.rows ? [result.rows] : []);
-            console.log('Found', rows.length, 'messages');
             
-            return res.status(200).json(rows);
+            console.log(`✅ Found ${rows.length} messages`);
+            
+            // Format messages to ensure correct structure
+            const formattedMessages = rows.map(msg => ({
+                id: msg.id,
+                text: msg.text || '',
+                author: msg.author || 'Anonymous',
+                category: msg.category || 'Other',
+                timestamp: msg.timestamp || Date.now()
+            }));
+            
+            return res.status(200).json(formattedMessages);
         }
         
         if (req.method === 'POST') {
             // Create message
+            console.log('📝 Creating message:', req.body);
             const { text, author, category } = req.body;
             
             if (!text || !category) {
+                console.error('❌ Missing required fields');
                 return res.status(400).json({ error: 'Text and category are required' });
             }
             
             const timestamp = Date.now();
             const authorName = author || 'Anonymous';
             
+            console.log('💾 Inserting message into database...');
             const result = await db.execute(
                 'INSERT INTO messages (text, author, category, timestamp) VALUES (?, ?, ?, ?)',
                 [text, authorName, category, timestamp]
             );
             
-            return res.status(200).json({ 
-                id: result.lastInsertRowid, 
-                text, 
-                author: authorName, 
-                category, 
-                timestamp 
-            });
+            console.log('✅ Message created with ID:', result.lastInsertRowid);
+            
+            const newMessage = {
+                id: result.lastInsertRowid,
+                text: text,
+                author: authorName,
+                category: category,
+                timestamp: timestamp
+            };
+            
+            return res.status(200).json(newMessage);
         }
         
         if (req.method === 'DELETE') {
             // Delete all messages
+            console.log('🗑️ Deleting all messages');
             await db.execute('DELETE FROM messages');
             return res.status(200).json({ message: 'All messages deleted' });
         }
         
         return res.status(405).json({ error: 'Method not allowed' });
     } catch (error) {
-        console.error('Error in messages API:', error);
-        return res.status(500).json({ error: 'Internal server error', details: error.message });
+        console.error('❌ Error in messages API:', error);
+        console.error('Error stack:', error.stack);
+        return res.status(500).json({ 
+            error: 'Internal server error', 
+            details: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };
